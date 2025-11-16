@@ -1,0 +1,265 @@
+									## terraform basic commands ##
+
+## Initializing terraform commands ##
+
+terraform init     			 		-- intitialise the working directory for cofiguration files and downloads the required plugins which we specified and configures the backend state 
+terraform init -upgrade 				-- it will upgrade the provider plugins to the latest acceptable version.
+terraform get 				 		-- downloads and updates the modules from its sources.
+
+## Making infra changes ##
+
+terraform plan 				 		-- shows the execution plan that it is going to create desired state of infra
+terraform plan -out=<filename> 	 		-- it will save the execution plan to a output file.
+terraform plan -target <resource name> 		-- it will shows the plan of a specific resource.
+terraform plan -replace <resource> 			-- to force a plan to replace a specific resource.
+terraform plan -var '<key>=<value>' 		-- set a value for one of the input variable.
+terraform plan -refresh-only 				-- inspect resource drift without updating the state file.
+terraform apply 						-- to create desired infra or to update it.
+terraform apply <file> 					-- to create or infra using a planned file.
+terraform apply -target <resource> 			-- to create or update a specific.
+terraform apply -replace <resource> 		-- force the replacement of a specific resource.
+terraform apply -auto-approve 			-- skip interactive approval for plan before apply.
+terraform apply -var-file="variables.tfvars"    -- to create infra using specific var.tfvars file.
+
+
+## Inspecting output values ##
+
+terraform output 						-- to show all output values.
+terraform output -json 					-- to show all
+terraform output -raw <name>  			-- to show a sepcific output value without quotes.
+
+## Managing state ##
+
+terraform refresh                         	-- update the statefile to match the existed infra.
+terraform show                            	-- to show the current state of the existed infra.
+terraform show <file>                     	-- to show a saved plan
+terraform show -json <file>               	-- to show the plan in json format
+terraform state list                      	-- list all resources in the state file.
+terraform state rm <resource>             	-- to remove a resource from the state file.
+terraform state mv <source> <dest>        	-- to rename a resource in the state file.
+terraform state replace-provider <from> <to>  	-- to replace provider for the resources in the state.
+terraform import <resource> <remote_id>       	-- import existing infra into terraform 
+terraform state pull                          	-- pull current state and output to stdout.
+
+## Tainting resources ##
+
+terraform taint <resource>                    	-- Mark a resource to be replaced.
+terraform untaint <resource>                  	-- mark a resource as no longer as tainted.
+
+## Destroying infra ##
+
+terraform destroy                             	-- destroy infra managed by terraform.
+terraform destroy -target <resource>          	-- destroy a specific resource.
+
+## Formatting and validation ##
+
+terraform validate                            	-- to check the configuration files or valide or not.
+terraform fmt                                 	-- to reformat your configuration in the standard style
+terraform fmt -check                          	-- check whether the configuration is formatted correctly, return non-zero exit code if it is not done.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1. create iam user named as awscliuser and role for iam user and attach the administrator access policy to it using cli,
+generate an access key for a iam user and configure it
+generate an iam role named ec2-s3 access with policy that allows ec2
+
+Commands:
+
+1. aws iam create-user --user-name awscliuser
+
+output: 
+
+{
+    "User": {
+        "Path": "/",
+        "UserName": "awscliuser",
+        "UserId": "AIDAZVMTVI6MSNYMDPNL3",
+        "Arn": "arn:aws:iam::664418994073:user/awscliuser",
+        "CreateDate": "2025-04-03T08:56:23+00:00"
+    }
+}
+
+
+2. aws iam attach-user-policy --user-name awscliuser --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+output:
+
+3. aws iam create-access-key --user-name awscliuser
+
+  output: 
+  {
+    "AccessKey": {
+        "UserName": "awscliuser",
+        "AccessKeyId": "AKIAZVMTVI6MY7J6UNWN",
+        "Status": "Active",
+        "SecretAccessKey": "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",
+        "CreateDate": "2025-04-03T08:58:20+00:00"
+    }
+}
+
+4. aws iam create-role --role-name ec2-s3-access --assume-role-policy-document file://trust-policy.json
+
+output:
+
+{
+    "Role": {
+        "Path": "/",
+        "RoleName": "ec2-s3-access",
+        "RoleId": "AROAZVMTVI6MW4RT57PU4",
+        "Arn": "arn:aws:iam::664418994073:role/ec2-s3-access",
+        "CreateDate": "2025-04-03T09:05:35+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "ec2.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        }
+    }
+}
+
+5.  aws iam create-policy --policy-name S3AccessPolicy1 --policy-document file://s3-access-policy.json
+
+output:
+
+{
+    "Policy": {
+        "PolicyName": "S3AccessPolicy1",
+        "PolicyId": "ANPAZVMTVI6MSSDF2FPW4",
+        "Arn": "arn:aws:iam::664418994073:policy/S3AccessPolicy1",
+        "Path": "/",
+        "DefaultVersionId": "v1",
+        "AttachmentCount": 0,
+        "PermissionsBoundaryUsageCount": 0,
+        "IsAttachable": true,
+        "CreateDate": "2025-04-03T09:16:02+00:00",
+        "UpdateDate": "2025-04-03T09:16:02+00:00"
+    }
+}
+
+
+6. aws iam attach-role-policy --role-name ec2-s3-access --policy-arn arn:aws:iam::664418994073:policy/S3AccessPolicy1
+
+
+
+
+
+2. s3 bucket management
+   a. create an s3 bucket named as mybuckt9843
+   b. enable the versioning and server side encryption for the bucket
+   c. upload sample file test.txt to s3 bucket
+   d. make the uploaded file publicly accessible using an acl
+   e. list all objects in the bucket and delete the uploaded files from the bucket.
+
+1.aws s3api create-bucket --bucket mybuckt9843 --region us-west-2 --create-bucket-configuration LocationConstraint=us-west-2
+
+
+2. aws s3api put-bucket-versioning --bucket mybuckt9843 --versioning-configuration Status=Enabled
+3. aws s3api put-bucket-encryption --bucket mybuckt9843 --server-side-encryption-configuration '{
+    "Rules": [{
+        "ApplyServerSideEncryptionByDefault": {
+            "SSEAlgorithm": "AES256"
+        }
+    }]
+}'
+4. aws s3api cp text.txt s3://mybuckt9843/
+5. aws s3api put-object-acl --bucket mybuckt9843 --key text.txt --acl public-read
+
+#troubleshooting command: aws s3api put-public-access-block --bucket mybuckt9843 --public-access-block-configuration BlockPublicAcls=false
+6. aws s3api ls s3://mybuckt9843/
+7. aws s3api delete-object --bucket mybuckt9843 --key test.txt
+
+
+	
+3.create a vpc and its components using aws cli
+  a. create an ec2 instance using custome vpc
+
+#commands:
+
+
+a. aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=MyVPC}]'
+
+b. aws ec2 create-subnet \
+    --vpc-id vpc-08158bb03b52e2511 \
+    --cidr-block 10.0.1.0/24 \
+    --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=my-ipv4-only-subnet}]'
+
+c. aws ec2 create-internet-gateway \
+    --tag-specifications ResourceType=internet-gateway,Tags=[{Key=Name,Value=my-igw}]
+d. aws ec2 attach-internet-gateway \
+    --internet-gateway-id igw-08244497a7f086709 \
+    --vpc-id vpc-08158bb03b52e2511
+
+e. aws ec2 create-route-table --vpc-id vpc-08158bb03b52e2511
+
+f. aws ec2 create-route --route-table-id rtb-0cb8a5c0d333c8eab --destination-cidr-block 0.0.0.0/0 --gateway-id igw-08244497a7f086709
+
+g. aws ec2 associate-route-table --route-table-id rtb-0cb8a5c0d333c8eab --subnet-id subnet-0e77f4c2a541ce1e5
+
+h. aws ec2 create-security-group --group-name MySecurityGroup --description "My security group for ec2" --vpc-id vpc-08158bb03b52e2511
+
+i. aws ec2 authorize-security-group-ingress \
+    --group-id sg-04c805134aef3b2ad \
+    --protocol tcp \
+    --port 22 \
+    --cidr 0.0.0.0/0
+
+j. aws ec2 run-instances --image-id ami-087f352c165340ea1 \
+     --count 1 --instance-type t2.micro \
+     --security-group-ids sg-04c805134aef3b2ad --subnet-id subnet-0e77f4c2a541ce1e5
+
+
+
+
+
+
+
+
+
+best practices
+
+least privilage permissions
+
+iam role consists of trust and permissions
+
+trust -- who can assume this role
+permissions  ---       what we can do after assuming a role
+
+
+iam roles are a secure way to grant permissions that you trust
+
+
+implement task 3 using aws cli and githubactions with oidc
+modules usecases
+implement task2 using githubactions
+
+
+
+
+
+
+
